@@ -1,0 +1,162 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="lv" lang="lv">
+<head>
+	<meta charset="utf-8">
+	<meta content="yes" name="apple-mobile-web-app-capable">
+	<meta content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0" name="viewport">
+	<title>Ping Pong</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<script src="/socket.io/socket.io.js"></script>
+
+</head>
+<body>
+ 
+<table id="ping"></table>
+
+<div>
+	<div id="left">«</div>
+	<div id="right">»</div>
+</div>
+
+
+<script>
+
+
+var socket = io.connect('http://10.10.30.211');
+socket.on('msg', function (data) {
+	render.draw(data.render);
+});
+
+var render = {
+	rows: 18,
+	cols: 12,
+	pLength: 3,
+
+	create: function() {
+		for(var i=0; i<this.rows; i++){
+			var tr = '<tr>';
+			for(var j=0; j<this.cols; j++){
+				tr += '<td id="'+i+'-'+j+'"></td>';
+			}
+			tr += '</tr>';
+			$('#ping').append(tr);
+		}
+	},
+
+	clear: function(){
+		for(var i=0; i<this.rows; i++){
+			for(var j=0; j<this.cols; j++){
+				$('#ping #'+i+'-'+j).attr('class', '');
+			}
+		}
+	},
+
+//	draw: function(pixels) {
+//		this.clear();
+//		for(var i=0; i<this.rows; i++){
+//			for(var j=0; j<this.cols; j++){
+//				var ch = pixels.charAt(i*this.cols + j);
+//				if(ch === '1'){
+//					$('#ping #'+i+'-'+j).attr('class', 'filled');
+//				}
+//			}
+//		}
+//
+//	},
+
+	draw: function(pixels){
+		this.clear();
+		var p1 = pixels.charAt(0);
+		for(var i=0; i<this.pLength; i++){
+			$('#ping #'+0+'-'+(parseInt(p1)+i)).attr('class', 'filled');
+		}
+
+		var p2 = pixels.charAt(1);
+		for(var i=0; i<this.pLength; i++){
+			$('#ping #'+(this.rows-1)+'-'+(parseInt(p2)+i)).attr('class', 'filled');
+		}
+
+		var by = this.convert(pixels.charAt(2));
+		var bx = this.convert(pixels.charAt(3));
+		$('#ping #'+by+'-'+bx).attr('class', 'filled')
+	},
+
+	convert: function(ch){
+		switch(ch){
+			case ':':
+				ch = 10;
+				break;
+			case ';':
+				ch = 11;
+				break;
+			case '<':
+				ch = 12;
+				break;
+			case '=':
+				ch = 13;
+				break;
+			case '>':
+				ch = 14;
+				break;
+			case '?':
+				ch = 15;
+				break;
+			case '@':
+				ch = 16;
+				break;
+			case 'A':
+				ch = 17;
+				break;
+			default:
+				ch = parseInt(ch);
+				break;
+		}
+		return ch;
+	}
+
+}
+
+
+
+
+
+$(document).ready(function() {
+//    $("#slider").slider();
+//	$("#slider").slider({ max: 9 });
+//
+//	$("#slider").slider({
+//		slide: function(event, ui) {
+//			socket.emit('msg', { movePlayer: ui.value} );
+//	   }
+//	});
+
+	// render.create();
+
+	$('#left').on('touchstart', function(){
+		socket.emit('msg', { movePlayer: 'left'} );
+	})
+	$('#right').on('touchstart', function(){
+		socket.emit('msg', { movePlayer: 'right'} );
+	})
+	// $('#left').on('click', function(){
+	// 	socket.emit('msg', { movePlayer: 'left'} );
+	// })
+});
+
+</script>
+
+<style>
+	#ping td {
+	  width: 10px;
+	  height: 10px;
+	  border: 1px dotted #999;
+	}
+	#slider { margin: 10px; width: 300px; }
+	.filled { background-color: #333; }
+	#left, #right   { width: 150px; height: 150px; background-color: #333; float: left; margin: 3px; color: white; text-align: center; font-size: 60px;}
+	  /*{ width: 100px; height: 100px; background-color: #333; float: left; margin: 3px; color: white; text-align: center; }*/
+	#left:hover, #right:hover { cursor: pointer; background-color: orange; }
+</style>
+
+</body>
+</html>
